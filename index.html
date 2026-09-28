@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Miniyo</title>
+<meta name="theme-color" content="#C45C3A" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-title" content="Miniyo" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="apple-touch-icon" href="icons/apple-180.png" />
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
+<style>
+  :root {
+    --bg:#FBF6EE; --ink:#2B1D14; --soft:#5A4638; --card:#FFFBF5;
+    --line:#E8D9C3; --accent:#C45C3A; --door:#FFFBF5; --muted:#B8A898;
+    --radius:18px; --font:"Segoe UI",system-ui,Calibri,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{font-family:var(--font);background:#1A1612;color:var(--ink);display:flex;justify-content:center}
+  .stage{width:100%;max-width:430px;min-height:100%;background:var(--bg);display:flex;flex-direction:column;position:relative;overflow:hidden}
+  .screen{display:none;flex:1;flex-direction:column;min-height:0}
+  .screen.on{display:flex}
+  .setup{padding:22px 20px 28px;overflow:auto}
+  .brand{font-size:12px;letter-spacing:2px;color:var(--accent);font-weight:700}
+  .setup h1{font-size:26px;line-height:1.15;margin:8px 0 6px}
+  .setup p.lead{color:var(--soft);font-size:14px;margin-bottom:16px}
+  .label{font-size:11px;letter-spacing:1px;color:var(--accent);font-weight:700;margin:14px 0 8px}
+  .row{display:flex;flex-wrap:wrap;gap:8px}
+  .pick{border:1.5px solid var(--line);background:var(--card);border-radius:12px;padding:10px 12px;font-weight:650;cursor:pointer;color:var(--ink);font-size:13px}
+  .pick.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,var(--card))}
+  .go{margin-top:18px;width:100%;border:0;background:var(--ink);color:#fff;padding:15px;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer}
+
+  .hero{position:relative;flex:1;min-height:280px;overflow:hidden}
+  .hero .bg{position:absolute;inset:-8%;width:116%;height:116%;object-fit:cover}
+  .hero .bg.lugar-ciudad{animation:citypulse 18s ease-in-out infinite}
+  .hero .bg.lugar-pueblo{animation:puebloway 26s ease-in-out infinite}
+  .hero .bg.lugar-costa{animation:waves 9s ease-in-out infinite}
+  @keyframes citypulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06) translate(-2%,-1%)}}
+  @keyframes puebloway{0%,100%{transform:scale(1.02)}50%{transform:scale(1.06) translate(2%,1%)}}
+  @keyframes waves{0%{transform:translate(-3%,2%) scale(1.08)}50%{transform:translate(3%,-1%) scale(1.12)}100%{transform:translate(-2%,1%) scale(1.08)}}
+  .petsfeet{position:absolute;left:6%;right:6%;bottom:3%;height:28%;z-index:3;pointer-events:none;display:flex;align-items:flex-end;justify-content:center;gap:4px}
+  .petwrap{position:relative;height:100%;max-width:44%;display:flex;align-items:flex-end;pointer-events:auto;cursor:pointer}
+  .petbit{height:100%;width:auto;max-width:100%;object-fit:contain;transform-origin:50% 90%;filter:drop-shadow(0 6px 8px rgba(0,0,0,.18))}
+  .petwrap.perro .petbit{animation:bark 2.6s ease-in-out infinite}
+  .petwrap.gato .petbit{animation:scratch 1.7s ease-in-out infinite}
+  .bub{position:absolute;left:50%;bottom:92%;background:#2b2118;color:#fff8f0;font-size:12px;font-weight:800;padding:4px 8px;border-radius:12px;opacity:0;white-space:nowrap;pointer-events:none}
+  .petwrap.perro .bub{animation:guau 2.6s ease-in-out infinite}
+  .petwrap.gato .bub{animation:miau 1.7s ease-in-out infinite}
+  .marks{position:absolute;right:-2px;top:18%;opacity:0}
+  .petwrap.gato .marks{animation:claw 1.7s ease-in-out infinite}
+  .marks i{display:block;height:2px;margin:3px 0;background:#c45c3e;transform:rotate(-25deg)}
+  .acc{position:absolute;z-index:2;pointer-events:none}
+  .acc.collar{left:28%;right:28%;bottom:42%;height:7px;border-radius:4px}
+  .acc.panuelo{left:30%;width:22px;height:16px;bottom:44%;border-radius:0 0 10px 10px;transform:rotate(-18deg)}
+  @keyframes bark{0%,62%,100%{transform:translateY(0)}68%{transform:translateY(-14px)}80%{transform:translateY(-16px)}88%{transform:translateY(0)}}
+  @keyframes scratch{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(14deg) translateX(8px)}}
+  @keyframes gau{0%{opacity:0}70%{opacity:1}88%{opacity:0}}
+  @keyframes guau{0%,62%,88%,100%{opacity:0}70%,80%{opacity:1}}
+  @keyframes miau{0%,20%,70%,100%{opacity:0}28%,48%{opacity:1}}
+  @keyframes claw{0%,18%,55%,100%{opacity:0}22%,50%{opacity:.85}}
+  .hero .shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.08) 0%,rgba(0,0,0,.18) 42%, var(--bg) 92%);pointer-events:none}
+  .wx{position:absolute;top:16px;left:16px;background:rgba(255,251,245,.9);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:700;z-index:2}
+  .cityn,.stamp{cursor:pointer}
+  .cityn{position:absolute;top:16px;right:16px;color:#fff;font-size:13px;font-weight:700;text-shadow:0 1px 6px rgba(0,0,0,.4);z-index:2}
+  .hero img.av{
+    position:absolute;left:50%;bottom:-6%;
+    width:92%;height:92%;
+    object-fit:contain;object-position:center top;
+    transform:translateX(-50%);
+    cursor:pointer;z-index:1;
+    -webkit-mask-image:linear-gradient(to bottom,#000 58%,transparent 96%);
+    mask-image:linear-gradient(to bottom,#000 58%,transparent 96%);
+    animation:breathe 4.8s ease-in-out infinite;
+  }
+  .tapme{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);font-size:11px;color:var(--soft);z-index:2;pointer-events:none}
+  @keyframes breathe{
+    0%,100%{transform:translateX(-50%) translateY(0)}
+    50%{transform:translateX(-50%) translateY(-7px)}
+  }
+  @keyframes drift{
+    from{transform:scale(1) translate(0,0)}
+    to{transform:scale(1.06) translate(-2%,-1%)}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .hero img.av,.hero .bg,.petwrap .petbit,.petwrap .bub,.petwrap .marks,.lluvia,.nubes:before,.nubes:after{animation:none}
+  }
+  .phrase{padding:8px 18px 4px;font-size:16px;line-height:1.3}
+  .phrase b{color:var(--accent)}
+  .doors{padding:6px 16px 0;display:flex;gap:8px}
+  .door{flex:1;background:var(--door);border:1px solid var(--line);border-radius:14px;padding:10px 8px;cursor:pointer;text-align:center}
+  .door .name{display:block;font-size:11px;color:var(--soft);font-weight:650}
+  .door .count{display:block;font-size:18px;font-weight:800;margin-top:2px}
+
+  .tabs{margin-top:auto;display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--line);background:var(--card);padding:8px 4px calc(10px + env(safe-area-inset-bottom))}
+  .tab{border:0;background:none;color:var(--muted);padding:8px 0;cursor:pointer;position:relative;display:flex;justify-content:center}
+  .tab svg{width:28px;height:28px}
+  .tab.on{color:var(--accent)}
+  .dot{position:absolute;top:4px;right:calc(50% - 18px);width:8px;height:8px;border-radius:50%;box-shadow:0 0 0 2px var(--card)}
+  .dot.rojo{background:#E23B2E}
+  .dot.amarillo{background:#E3B341}
+  .dot.verde{background:#3D9A5A}
+
+  .fabs{position:absolute;right:14px;bottom:92px;display:flex;flex-direction:column;gap:10px;z-index:3}
+  .fab{width:52px;height:52px;border-radius:26px;border:0;background:var(--ink);color:#fff;font-size:22px;cursor:pointer;box-shadow:0 6px 16px rgba(0,0,0,.2)}
+  .fab.ghost{background:var(--card);color:var(--ink);border:1px solid var(--line);font-size:18px}
+
+  .topbar{display:flex;align-items:center;gap:8px;padding:14px 14px 6px}
+  .back{border:0;background:none;font-size:22px;cursor:pointer;color:var(--ink)}
+  .topbar h2{font-size:20px;flex:1}
+  .addbtn{border:0;background:var(--ink);color:#fff;border-radius:999px;padding:8px 12px;font-size:13px;font-weight:700;cursor:pointer}
+  .list,.ficha{padding:8px 16px 90px;overflow:auto;display:flex;flex-direction:column;gap:10px}
+  .item,.block{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;position:relative}
+  .k{font-size:11px;letter-spacing:.8px;color:var(--accent);font-weight:700}
+  .t{font-size:16px;font-weight:700;margin-top:3px}
+  .s{color:var(--soft);font-size:14px;margin-top:2px}
+  .kill{position:absolute;top:10px;right:10px;border:0;background:none;color:var(--muted);cursor:pointer;font-size:16px}
+  .viz{width:100%;height:180px;object-fit:contain;background:var(--card);border-radius:14px;border:1px solid var(--line)}
+  .viz.tall{height:240px;object-fit:cover;object-position:top}
+
+  .sheet,.chat{display:none;position:absolute;inset:0;z-index:5}
+  .sheet{background:rgba(20,14,10,.45);align-items:flex-end}
+  .sheet.on,.chat.on{display:flex;flex-direction:column}
+  .panel{width:100%;background:var(--card);border-radius:22px 22px 0 0;padding:16px 16px 28px;max-height:88%;overflow:auto}
+  .grab{width:40px;height:4px;background:var(--line);border-radius:2px;margin:0 auto 14px}
+  .panel input,.chatbar input{width:100%;padding:14px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);font-size:16px;margin:8px 0 12px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+  .chip{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer}
+  .guess{display:none;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:12px;font-size:14px}
+  .guess.on{display:block}
+  .ok{width:100%;border:0;background:var(--ink);color:#fff;padding:14px;border-radius:12px;font-weight:700;cursor:pointer}
+  .toast{display:none;position:absolute;left:16px;right:16px;bottom:90px;background:var(--ink);color:#fff;padding:12px 14px;border-radius:12px;font-size:14px;z-index:6}
+  .toast.on{display:block}
+
+  .chat{background:var(--bg)}
+  .chathead{display:flex;align-items:center;gap:10px;padding:14px 14px 8px;border-bottom:1px solid var(--line)}
+  .chathead img{width:42px;height:42px;border-radius:21px;object-fit:cover;object-position:top}
+  .msgs{flex:1;overflow:auto;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+  .msg{max-width:82%;padding:10px 12px;border-radius:14px;font-size:14px;line-height:1.35}
+  .msg.bot{background:var(--card);border:1px solid var(--line);align-self:flex-start}
+  .msg.me{background:var(--accent);color:#fff;align-self:flex-end}
+  .chatbar{display:flex;gap:8px;padding:10px 12px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--line)}
+  .chatbar input{margin:0;flex:1}
+  .chatbar button{border:0;background:var(--ink);color:#fff;border-radius:12px;padding:0 14px;font-weight:700;cursor:pointer}
+
+  body.tierno{--bg:#FBF6EE;--card:#FFFBF5;--line:#E8D9C3;--ink:#2B1D14;--soft:#5A4638;--accent:#C45C3A}
+  body.serio{--bg:#D7E3EC;--card:#F3F7FA;--line:#B7C7D3;--ink:#163044;--soft:#3E5A6E;--accent:#1F6F8B;--door:#F3F7FA;--radius:10px;--muted:#7A90A0}
+  body.malote{--bg:#1A1816;--card:#24211E;--line:#3A3530;--ink:#F5F0EA;--soft:#D6CFC6;--accent:#E07A5F;--door:#24211E}
+  body.malote .go,body.malote .fab,body.malote .ok,body.malote .addbtn,body.malote .chatbar button{background:#E07A5F;color:#1A1816}
+  body.malote .wx{background:rgba(36,33,30,.9);color:#F5F0EA}
+  body.malote .tabs{background:#141210}
+  body.malote .msg.me{color:#1A1816}
+  .item.done .t,.item.done .s{text-decoration:line-through;opacity:.45}
+  .wxrow{position:absolute;inset:0;pointer-events:none;z-index:1;overflow:hidden}
+  .sol{background:radial-gradient(circle at 78% 8%, rgba(255,210,90,.55), transparent 42%)}
+  .nubes:before,.nubes:after{content:"";position:absolute;background:#fff;opacity:.28;border-radius:40px;height:46px;width:140px;top:18%;animation:drift 16s linear infinite}
+  .nubes:after{top:28%;left:40%;width:180px;animation-duration:22s}
+  .lluvia{background:repeating-linear-gradient(-18deg, transparent 0 12px, rgba(255,255,255,.35) 12px 13px);animation:rain 0.7s linear infinite}
+  .viento .hero img.av{animation:wind 2.4s ease-in-out infinite}
+  .noche .hero .shade{background:linear-gradient(180deg,rgba(8,16,40,.45) 0%,rgba(8,16,40,.2) 40%, var(--bg) 92%)}
+  .noche .wx{background:rgba(20,28,48,.85);color:#F5F0EA}
+  @keyframes rain{from{background-position:0 0}to{background-position:18px 28px}}
+  @keyframes wind{
+    0%,100%{transform:translateX(-50%) rotate(-1.2deg)}
+    50%{transform:translateX(-48%) rotate(1.4deg)}
+  }
+  .stamp{font-size:12px;letter-spacing:1px;color:var(--accent);font-weight:800;margin:2px 18px 0}
+</style>
+</head>
+<body class="tierno">
+<div class="stage">
+
+<section id="setup" class="screen on">
+  <div class="setup">
+    <div class="brand">MINIYO · PILOTO</div>
+    <h1>Primero, el miniyo.</h1>
+    <p class="lead">La cara no obliga al carácter. El sitio sí cambia el fondo.</p>
+    <div class="label">BASE</div>
+    <div class="row">
+      <button class="pick on" data-g="h">Hombre</button>
+      <button class="pick" data-g="m">Mujer</button>
+    </div>
+    <div class="label">APARIENCIA</div>
+    <div class="row">
+      <button class="pick on" data-look="tierno">Tierno</button>
+      <button class="pick" data-look="serio">Serio</button>
+      <button class="pick" data-look="malote">Malote</button>
+    </div>
+    <div class="label">PERSONALIDAD</div>
+    <div class="row">
+      <button class="pick on" data-a="tierno">Tierno</button>
+      <button class="pick" data-a="serio">Serio</button>
+      <button class="pick" data-a="malote">Malote</button>
+    </div>
+    <div class="label">DÓNDE VIVES</div>
+    <div class="row">
+      <button class="pick on" data-city="ciudad">Ciudad</button>
+      <button class="pick" data-city="pueblo">Pueblo</button>
+      <button class="pick" data-city="costa">Ciudad costera</button>
+    </div>
+    <div class="label">AHORA MISMO (clima de juguete)</div>
+    <div class="row">
+      <button class="pick on" data-wx="sol">Sol</button>
+      <button class="pick" data-wx="nubes">Nubes</button>
+      <button class="pick" data-wx="lluvia">Lluvia</button>
+      <button class="pick" data-wx="viento">Viento</button>
+    </div>
+    <button class="go" id="enter">Entrar</button>
+  </div>
+</section>
+
+<section id="home" class="screen">
+  <div class="hero">
+    <img class="bg" id="citybg" alt="" />
+    <div class="wxrow" id="wxrow"></div>
+    <div class="shade"></div>
+    <div class="wx" id="wx">Sol · 22°</div>
+    <div class="cityn" id="cityn">Ciudad</div>
+    <img class="av" id="avatar" alt="Miniyo" />
+    <div class="petsfeet" id="petsfeet"></div>
+    <div class="tapme">tócame · frase · toca el sitio para cambiar</div>
+  </div>
+  <div class="stamp" id="stamp"></div>
+  <div class="phrase" id="phrase"></div>
+  <div class="doors">
+    <div class="door" data-open="pendiente"><span class="name">Pendiente</span><span class="count" id="c-p">3</span></div>
+    <div class="door" data-open="importante"><span class="name">Importante</span><span class="count" id="c-i">1</span></div>
+    <div class="door" data-open="compra"><span class="name">Compra</span><span class="count" id="c-c">3</span></div>
+  </div>
+  <nav class="tabs"></nav>
+  <div class="fabs">
+    <button class="fab ghost" id="openchat" title="Hablar">💬</button>
+    <button class="fab" id="plus" title="Añadir">+</button>
+  </div>
+</section>
+
+<section id="pendiente" class="screen">
+  <div class="topbar"><button class="back" data-back>←</button><h2>Pendiente</h2><button class="addbtn" data-add="pendiente">+ Añadir</button></div>
+  <div class="list" id="list-p"></div>
+  <nav class="tabs"></nav>
+</section>
+<section id="importante" class="screen">
+  <div class="topbar"><button class="back" data-back>←</button><h2>Importante</h2><button class="addbtn" data-add="importante">+ Añadir</button></div>
+  <div class="list" id="list-i"></div>
+  <nav class="tabs"></nav>
+</section>
+<section id="compra" class="screen">
+  <div class="topbar"><button class="back" data-back>←</button><h2>Compra</h2><button class="addbtn" data-add="compra">+ Añadir</button></div>
+  <div class="list" id="list-c"></div>
+  <nav class="tabs"></nav>
+</section>
+<section id="casa" class="screen">
+  <div class="topbar"><button class="back" data-back>←</button><h2>Casa</h2><button class="addbtn" data-add="pendiente">+ Añadir</button></div>
+  <div class="ficha">
+    <img class="viz" id="houseviz" alt="casa" />
+    <div class="block"><div class="k">TIPO</div><div class="t" id="housename">Piso</div></div>
+    <div class="block"><div class="k">RÉGIMEN</div><div class="t" id="housereg">—</div></div>
+    <div class="block" id="housepapers"></div>
+  </div>
+  <nav class="tabs"></nav>
+</section>
+<section id="coche" class="screen">
+  <div class="topbar"><button class="back" data-back>←</button><h2 id="cochetitle">Coche</h2><button class="addbtn" data-add="pendiente">+ Añadir</button></div>
+  <div class="ficha" id="cochebody"></div>
+  <nav class="tabs"></nav>
+</section>
+<section id="trabajo" class="screen">
+  <div class="topbar"><button class="back" data-back>←</button><h2>Trabajo</h2><button class="addbtn" data-add="pendiente">+ Añadir</button></div>
+  <div class="ficha" id="jobbody"></div>
+  <nav class="tabs"></nav>
+</section>
+<section id="mascotas" class="screen">
+  <div class="topbar"><button class="back" data-back>←</button><h2>Mascotas</h2><button class="addbtn" id="addpet">+ Añadir</button></div>
+  <div class="ficha" id="petsbody"></div>
+  <nav class="tabs"></nav>
+</section>
+
+<div class="sheet" id="quiz">
+  <div class="panel" id="quizpanel"></div>
+</div>
+
+<div class="sheet" id="sheet">
+  <div class="panel">
+    <div class="grab"></div>
+    <h3 id="sheettitle">Añadir</h3>
+    <input id="addin" placeholder="cita, recordatorio, leche…" />
+    <div class="chips">
+      <button class="chip" data-ex="dentista viernes 17:00">cita dentista</button>
+      <button class="chip" data-ex="pagar IBI">recordatorio</button>
+      <button class="chip" data-ex="leche">compra</button>
+      <button class="chip" data-ex="veterinario Luna">veterinario</button>
+      <button class="chip" data-ex="pienso y arena">comida mascota</button>
+      <button class="chip" data-ex="pastillas antipulgas">pastillas</button>
+    </div>
+    <div class="guess" id="guess"></div>
+    <button class="ok" id="confirm">Guardar</button>
+  </div>
+</div>
+
+<div class="chat" id="chat">
+  <div class="chathead">
+    <button class="back" id="closechat">←</button>
+    <img id="chatav" alt="" />
+    <div>
+      <div class="t">Miniyo</div>
+      <div class="s">Dime qué apunto, cambio o borro.</div>
+    </div>
+  </div>
+  <div class="msgs" id="msgs"></div>
+  <div class="chatbar">
+    <input id="chatin" placeholder="Apunta la ITV… / borra leche…" />
+    <button id="chatsend">Enviar</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+</div>
+
+<script>
+const KEY="miniyo-demo-v12";
+const AV={h:{tierno:"img/WsQU3.jpg",serio:"img/YC7RF.jpg",malote:"img/AGc4P.jpg"},m:{tierno:"img/nnIHs.jpg",serio:"img/yiZB9.jpg",malote:"img/4p4ba.jpg"}};
+const CITY={
+  ciudad:{img:"img/OQv8s.jpg",name:"Ciudad"},
+  pueblo:{img:"img/pueblo.jpg",name:"Pueblo"},
+  costa:{img:"img/h3IW4.jpg",name:"Ciudad costera"}
+};
+const PETIMG={perro:"img/perro.jpg",gato:"img/gato.jpg"};
+const PETBREED={perro:["Mestizo","Labrador","Golden","Pastor alemán","Yorkshire","Caniche","Bulldog","Chihuahua"],gato:["Europeo / común","Persa","Siamés","Maine Coon","Bengala","Azul ruso"]};
+const PETCOLOR={perro:[["marron","Marrón"],["negro","Negro"],["blanco","Blanco"],["beige","Beige"],["atigrado","Atigrado"],["manchado","Manchado"]],gato:[["naranja","Naranja"],["negro","Negro"],["blanco","Blanco"],["gris","Gris"],["atigrado","Atigrado"],["calico","Calicó"]]};
+const PETTINT={marron:"",negro:"grayscale(1) contrast(1.1)",blanco:"brightness(1.35) saturate(.3)",beige:"sepia(.25) brightness(1.15)",atigrado:"hue-rotate(20deg) saturate(1.1)",manchado:"contrast(1.15)",naranja:"",gris:"grayscale(.85) brightness(1.1)",calico:"hue-rotate(-10deg) saturate(1.2)"};
+const ACCCOLOR=[["rojo","Rojo","#c45c3e"],["azul","Azul","#3d6ea8"],["verde","Verde","#4a7c59"],["negro","Negro","#2b2118"],["rosa","Rosa","#d48aa0"],["amarillo","Amarillo","#d4a017"]];
+const HOUSE={piso:{img:"img/srfk6.jpg",name:"Piso"},casa:{img:"img/aYpbN.jpg",name:"Casa"},chalet:{img:"img/ebuRp.jpg",name:"Chalet"}};
+const CAR={pequeño:{img:"img/dSFN8.jpg",name:"Utilitario"},berlina:{img:"img/2I6fx.jpg",name:"Berlina"},wagon:{img:"img/KjjS4.jpg",name:"Familiar"},suv:{img:"img/7HJH6.jpg",name:"SUV"},furgoneta:{img:"img/6RP61.jpg",name:"Furgoneta"},moto:{img:"img/vEa74.jpg",name:"Moto"}};
+const JOB={oficina:{name:"Oficina / admin",note:"Camisa."},salud:{img:"img/jWT74.jpg",name:"Salud",note:"Bata o pijama."},oficio:{img:"img/qbiFz.jpg",name:"Oficio / taller",note:"Mono."},hosteleria:{img:"img/hWPcU.jpg",name:"Hostelería",note:"Camisa negra y delantal."},otros:{name:"Otros",note:"Ropa de tu actitud + placa."}};
+const WXLAB={sol:"Sol · 22°",nubes:"Nubes · 18°",lluvia:"Lluvia · 14°",viento:"Viento · 16°"};
+const LINES={
+  tierno:["Si sales, el chubasquero no muerde.","Ana el sábado. ¿Tarta o nos hacemos los locos?","He guardado la comunidad. Tú solo existes."],
+  serio:["ITV en 18 días. No es una opinión.","Reunión 10:30. Llega.","La lista de la compra sigue ahí."],
+  malote:["Llueve o no, la ITV no se va.","Cumple de Ana. Mueve el culo o no.","Tres cosas. No son poesía."]
+};
+const SAY={
+  tierno:{ok:t=>"Hecho, lo guardo: "+t, del:t=>"Quito "+t+".", edit:t=>"Lo cambio: "+t+".", huh:"No te pillo. Prueba: apunta X, borra X, cambia X."},
+  serio:{ok:t=>"Guardado. "+t, del:t=>"Eliminado: "+t+".", edit:t=>"Actualizado: "+t+".", huh:"No entendido. Usa apunta / borra / cambia."},
+  malote:{ok:t=>"Apuntado. "+t, del:t=>"Fuera: "+t+".", edit:t=>"Cambiado. "+t+".", huh:"Habla claro: apunta, borra o cambia."}
+};
+let uid=10;
+const fresh=()=>({
+  g:"h",look:"tierno",a:"tierno",city:"ciudad",house:"piso",car:"pequeño",job:"oficina",wx:"sol",carColor:"none",
+  seenCasa:false,seenCoche:false,seenTrabajo:false,seenMascotas:false,pets:[],
+  regimen:"alquiler",housePapers:{},carPapers:{},
+  vehKind:"coche",wifi:"",tv:[],
+  pendiente:[
+    {id:1,k:"TRABAJO",t:"Reunión",s:"Hoy · 10:30",done:false},
+    {id:2,k:"CASA",t:"Comunidad",s:"85 € · día 5",done:false},
+    {id:3,k:"COCHE",t:"ITV",s:"14 oct · en 18 días",done:false}
+  ],
+  importante:[{id:4,k:"MARCADO",t:"Cumple Ana",s:"Sábado"}],
+  compra:[{id:5,k:"LISTA",t:"Leche",s:"Casa"},{id:6,k:"LISTA",t:"Bombilla pasillo",s:"Casa"},{id:7,k:"LISTA",t:"Tarta",s:"Por Ana"}],
+  chat:[]
+});
+let state=fresh();
+let hadSave=false;
+try{
+  const raw=localStorage.getItem(KEY)||localStorage.getItem("miniyo-demo-v11")||localStorage.getItem("miniyo-demo-v10");
+  const s=raw?JSON.parse(raw):null;
+  if(s&&s.pendiente){ state=Object.assign(fresh(),s); hadSave=true; }
+}catch(e){}
+if(!Array.isArray(state.pets)) state.pets=[];
+if(!state.look) state.look=state.a||"tierno";
+if(state.city==="madrid") state.city="ciudad";
+if(state.city==="valencia") state.city="costa";
+if(state.city==="otro") state.city="pueblo";
+if(!CITY[state.city]) state.city="ciudad";
+if(!HOUSE[state.house]) state.house="piso";
+if(state.car && !CAR[state.car] && state.car!=="no") state.car="pequeño";
+
+function save(){ localStorage.setItem(KEY, JSON.stringify(state)); }
+
+const ICO={
+  home:'<svg viewBox="0 0 32 32"><circle cx="16" cy="18" r="8.2" fill="currentColor"/><path d="M16 6c2.4 1.2 3.4 3.2 2.6 5.4-.6 1.6-2 2.4-3.6 2" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="13.3" cy="17.4" r="1.15" fill="var(--card)"/><circle cx="18.7" cy="17.4" r="1.15" fill="var(--card)"/><path d="M13.6 21.2c1.4 1.1 3.4 1.1 4.8 0" fill="none" stroke="var(--card)" stroke-width="1.4" stroke-linecap="round"/></svg>',
+  casa:'<svg viewBox="0 0 32 32"><path fill="currentColor" d="M8 8h16v20H8z"/><path fill="var(--card)" d="M11 11h4v3.2h-4zm6 0h4v3.2h-4zM11 16h4v3.2h-4zm6 0h4v3.2h-4z"/><path fill="var(--card)" d="M13.4 22h5.2v6h-5.2z"/></svg>',
+  coche:'<svg viewBox="0 0 32 32"><path fill="currentColor" d="M2.8 20.2 5 15.6h9.2l1.8 4.6H18v4H2.4v-4z"/><circle cx="6.2" cy="25.2" r="1.7" fill="currentColor"/><circle cx="6.2" cy="25.2" r="0.7" fill="var(--card)"/><circle cx="14.4" cy="25.2" r="1.7" fill="currentColor"/><circle cx="14.4" cy="25.2" r="0.7" fill="var(--card)"/><path fill="currentColor" d="M21.2 22.4c2.6-4.8 7.6-5 9.2-1.2l-1.6.6c-.8-2-3.6-2.2-5.2.8l-2.4-.2z"/><circle cx="23.2" cy="24.8" r="2.1" fill="currentColor"/><circle cx="23.2" cy="24.8" r="1" fill="var(--card)"/><circle cx="28.4" cy="24.8" r="2.1" fill="currentColor"/><circle cx="28.4" cy="24.8" r="1" fill="var(--card)"/></svg>',
+  trabajo:'<svg viewBox="0 0 32 32"><rect x="5" y="12" width="22" height="14.5" rx="2.2" fill="currentColor"/><path d="M12 12V9.2A2.2 2.2 0 0 1 14.2 7h3.6A2.2 2.2 0 0 1 20 9.2V12" fill="none" stroke="currentColor" stroke-width="2"/><rect x="13.2" y="16.6" width="5.6" height="2.2" rx="1" fill="var(--card)"/></svg>',
+  mascotas:'<svg viewBox="0 0 32 32"><ellipse cx="12" cy="20" rx="7" ry="6" fill="currentColor"/><circle cx="8.2" cy="13" r="2.2" fill="currentColor"/><circle cx="23.5" cy="18" r="5.2" fill="currentColor"/></svg>'
+};
+function tabsHtml(){
+  const dots={home:"rojo",casa:"amarillo",coche:state.car==="no"?"":"verde",mascotas:(state.pets&&state.pets.length)?"verde":"",trabajo:state.job==="no"?"":"rojo"};
+  return [["home","home"],["casa","casa"],["coche","coche"],["mascotas","mascotas"],["trabajo","trabajo"]].map(([tab,ico])=>
+    `<button class="tab" data-tab="${tab}" aria-label="${tab==="coche"?"vehículo":tab}">${ICO[ico]}${dots[tab]?`<i class="dot ${dots[tab]}"></i>`:""}</button>`
+  ).join("");
+}
+function paintTabs(){ document.querySelectorAll("nav.tabs").forEach(n=>n.innerHTML=tabsHtml()); }
+
+const QPAPER={
+  casa:[["contrato","Contrato / escrituras"],["ibi","IBI"],["comunidad","Comunidad"],["seguro","Seguro hogar"],["luz","Luz / gas / agua"]],
+  coche:[["permiso","Permiso de circulación"],["ficha","Ficha técnica"],["itv","ITV"],["seguro","Seguro"],["ivtm","Impuesto de circulación"]],
+  moto:[["permiso","Permiso"],["itv","ITV"],["seguro","Seguro"]],
+  patinete:[["seguro","Seguro / factura"]],
+  publico:[["abono","Abono / tarjeta"]],
+  trabajo:[["contrato","Contrato"],["nomina","Nómina"],["ss","Vida laboral / SS"]]
+};
+const WIFI=["Movistar","Orange","Vodafone","MásMóvil","Digi","Otra","Ninguna"];
+const TV=["Netflix","Max","Prime Video","Disney+","Movistar Plus+"];
+const REG={alquiler:"Alquiler",hipoteca:"Hipoteca",pagada:"En propiedad"};
+const VEHLAB={coche:"Coche",moto:"Moto",patinete:"Patinete",publico:"Transporte público"};
+function paperLine(kind){
+  const key=kind==="casa"?"casa":(state.vehKind||"coche");
+  const map=kind==="casa"?state.housePapers:state.carPapers;
+  const list=QPAPER[key]||QPAPER.coche;
+  const rows=list.map(([id,lab])=>`${lab}: ${map[id]==="si"?"lo tengo":map[id]==="luego"?"más tarde":"—"}`).join(" · ");
+  return `<div class="k">PAPELES</div><div class="s">${rows||"—"}</div>`;
+}
+function openQuiz(kind){
+  const titles={casa:"Tu casa",coche:"Cómo te mueves",trabajo:"Tu curro"};
+  const leads={casa:"Tipo, papeles, wifi y lo que ves.",coche:"Primero qué es. Luego solo lo que toca.",trabajo:"Sector. Los papeles pueden esperar."};
+  let html=`<div class="grab"></div><h3>${titles[kind]}</h3><p class="s" style="margin-bottom:10px">${leads[kind]}</p>`;
+  if(kind==="casa"){
+    html+=`<div class="label">TIPO</div><div class="row">
+      <button class="pick ${state.house==="piso"?"on":""}" data-q="house" data-v="piso">Piso</button>
+      <button class="pick ${state.house==="casa"?"on":""}" data-q="house" data-v="casa">Casa</button>
+      <button class="pick ${state.house==="chalet"?"on":""}" data-q="house" data-v="chalet">Chalet</button></div>
+      <div class="label">RÉGIMEN</div><div class="row">
+      <button class="pick ${state.regimen==="alquiler"?"on":""}" data-q="regimen" data-v="alquiler">Alquiler</button>
+      <button class="pick ${state.regimen==="hipoteca"?"on":""}" data-q="regimen" data-v="hipoteca">Hipoteca</button>
+      <button class="pick ${state.regimen==="pagada"?"on":""}" data-q="regimen" data-v="pagada">Pagada</button></div>
+      <div class="label">WIFI</div><div class="row">
+      ${WIFI.map(w=>`<button class="pick ${state.wifi===w?"on":""}" data-q="wifi" data-v="${w}">${w}</button>`).join("")}
+      </div>
+      <div class="label">TV / SERIES (las de más gente)</div><div class="row">
+      ${TV.map(w=>`<button class="pick ${(state.tv||[]).includes(w)?"on":""}" data-tv="${w}">${w}</button>`).join("")}
+      <button class="pick ${(state.tv||[]).length===0?"on":""}" data-tv="__none">Ninguna</button>
+      </div>
+      <div class="label">¿LO TIENES A MANO?</div>`;
+    QPAPER.casa.forEach(([id,lab])=>{
+      html+=`<div class="s" style="margin:8px 0 4px">${lab}</div><div class="row">
+        <button class="pick ${state.housePapers[id]==="si"?"on":""}" data-paper="casa" data-id="${id}" data-v="si">Sí</button>
+        <button class="pick ${state.housePapers[id]==="luego"?"on":""}" data-paper="casa" data-id="${id}" data-v="luego">Luego</button></div>`;
+    });
+  } else if(kind==="coche"){
+    html+=`<div class="label">QUÉ USAS</div><div class="row">
+      ${[["coche","Coche"],["moto","Moto"],["patinete","Patinete"],["publico","Transporte público"]].map(([v,l])=>`<button class="pick ${state.vehKind===v?"on":""}" data-q="vehKind" data-v="${v}">${l}</button>`).join("")}
+    </div>`;
+    if(state.vehKind==="coche"){
+      html+=`<div class="label">FORMA</div><div class="row">
+        ${[["pequeño","Pequeño"],["berlina","Berlina"],["wagon","Familiar"],["suv","SUV"],["furgoneta","Furgoneta"]].map(([v,l])=>`<button class="pick ${state.car===v?"on":""}" data-q="car" data-v="${v}">${l}</button>`).join("")}
+      </div><div class="label">¿LO TIENES A MANO?</div>`;
+      QPAPER.coche.forEach(([id,lab])=>{
+        html+=`<div class="s" style="margin:8px 0 4px">${lab}</div><div class="row">
+          <button class="pick ${state.carPapers[id]==="si"?"on":""}" data-paper="coche" data-id="${id}" data-v="si">Sí</button>
+          <button class="pick ${state.carPapers[id]==="luego"?"on":""}" data-paper="coche" data-id="${id}" data-v="luego">Luego</button></div>`;
+      });
+    } else if(state.vehKind==="moto"){
+      html+=`<div class="label">¿LO TIENES A MANO?</div>`;
+      QPAPER.moto.forEach(([id,lab])=>{
+        html+=`<div class="s" style="margin:8px 0 4px">${lab}</div><div class="row">
+          <button class="pick ${state.carPapers[id]==="si"?"on":""}" data-paper="coche" data-id="${id}" data-v="si">Sí</button>
+          <button class="pick ${state.carPapers[id]==="luego"?"on":""}" data-paper="coche" data-id="${id}" data-v="luego">Luego</button></div>`;
+      });
+    } else if(state.vehKind==="patinete"){
+      html+=`<div class="label">¿LO TIENES A MANO?</div>`;
+      QPAPER.patinete.forEach(([id,lab])=>{
+        html+=`<div class="s" style="margin:8px 0 4px">${lab}</div><div class="row">
+          <button class="pick ${state.carPapers[id]==="si"?"on":""}" data-paper="coche" data-id="${id}" data-v="si">Sí</button>
+          <button class="pick ${state.carPapers[id]==="luego"?"on":""}" data-paper="coche" data-id="${id}" data-v="luego">Luego</button></div>`;
+      });
+    } else {
+      html+=`<div class="label">ABONO</div><div class="row">
+        <button class="pick ${state.carPapers.abono==="si"?"on":""}" data-paper="coche" data-id="abono" data-v="si">Sí, lo tengo</button>
+        <button class="pick ${state.carPapers.abono==="luego"?"on":""}" data-paper="coche" data-id="abono" data-v="luego">Luego</button>
+      </div>`;
+    }
+  } else {
+    html+=`<div class="label">SECTOR</div><div class="row">
+      ${[["oficina","Oficina"],["salud","Salud"],["oficio","Oficio"],["hosteleria","Hostelería"],["otros","Otros"],["no","Sin curro"]].map(([v,l])=>`<button class="pick ${state.job===v?"on":""}" data-q="job" data-v="${v}">${l}</button>`).join("")}
+    </div>`;
+  }
+  html+=`<button class="ok" id="quizok" style="margin-top:14px">Listo</button>
+    <button class="ok" id="quizskip" style="margin-top:8px;background:transparent;color:var(--ink);border:1px solid var(--line)">Ahora no</button>`;
+  document.getElementById("quizpanel").innerHTML=html;
+  document.getElementById("quiz").classList.add("on");
+  document.getElementById("quizok").onclick=()=>{
+    if(kind==="casa") state.seenCasa=true;
+    if(kind==="coche") state.seenCoche=true;
+    if(kind==="trabajo") state.seenTrabajo=true;
+    closeQuiz(); save(); renderWorlds();
+  };
+  document.getElementById("quizskip").onclick=()=>{
+    if(kind==="casa") state.seenCasa=true;
+    if(kind==="coche") state.seenCoche=true;
+    if(kind==="trabajo") state.seenTrabajo=true;
+    closeQuiz(); save();
+  };
+}
+function show(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("on"));
+  document.getElementById(id).classList.add("on");
+  document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on", t.dataset.tab===id));
+  if(id==="casa" && !state.seenCasa) openQuiz("casa");
+  if(id==="coche" && !state.seenCoche) openQuiz("coche");
+  if(id==="trabajo" && !state.seenTrabajo) openQuiz("trabajo");
+  if(id==="mascotas"){ renderPetsPage(); if(!state.seenMascotas && !(state.pets&&state.pets.length)) openPetEditor(null); }
+}
+function toast(t){const el=document.getElementById("toast"); el.textContent=t; el.classList.add("on"); setTimeout(()=>el.classList.remove("on"),1600);}
+
+function renderLists(){
+  const row=x=>`<div class="item ${x.done?"done":""}" data-toggle="${x.id}"><button class="kill" data-del="${x.id}">✕</button><div class="k">${esc(x.k)}</div><div class="t">${esc(x.t)}</div><div class="s">${esc(x.s)}${x.done?" · hecho":""}</div></div>`;
+  document.getElementById("list-p").innerHTML=state.pendiente.map(row).join("")||`<div class="item"><div class="t">Nada pendiente.</div></div>`;
+  document.getElementById("list-i").innerHTML=state.importante.map(row).join("")||`<div class="item"><div class="t">Nada marcado.</div></div>`;
+  document.getElementById("list-c").innerHTML=state.compra.map(row).join("")||`<div class="item"><div class="t">Lista vacía.</div></div>`;
+  document.getElementById("c-p").textContent=state.pendiente.filter(x=>!x.done).length;
+  document.getElementById("c-i").textContent=state.importante.filter(x=>!x.done).length;
+  document.getElementById("c-c").textContent=state.compra.filter(x=>!x.done).length;
+}
+function renderWorlds(){
+  const H=HOUSE[state.house];
+  document.getElementById("houseviz").src=H.img;
+  document.getElementById("housename").textContent=H.name;
+  const hr=document.getElementById("housereg"); if(hr) hr.textContent=REG[state.regimen]||"—";
+  const hp=document.getElementById("housepapers");
+  if(hp){
+    const tv=(state.tv||[]).join(", ")||"—";
+    hp.innerHTML=paperLine("casa")+`<div class="k" style="margin-top:10px">WIFI</div><div class="t">${state.wifi||"—"}</div>
+      <div class="k" style="margin-top:8px">TV</div><div class="s">${tv}</div>`;
+  }
+  const body=document.getElementById("cochebody");
+  const kind=state.vehKind||"coche";
+  document.getElementById("cochetitle").textContent=VEHLAB[kind]||"Vehículo";
+  if(kind==="publico"){
+    body.innerHTML=`<div class="block"><div class="k">MODO</div><div class="t">Transporte público</div></div><div class="block">${paperLine("coche")}</div>`;
+  } else if(kind==="patinete"){
+    body.innerHTML=`<div class="block"><div class="k">MODO</div><div class="t">Patinete</div></div><div class="block">${paperLine("coche")}</div>`;
+  } else if(kind==="moto"){
+    const C=CAR.moto;
+    body.innerHTML=`<img class="viz" src="${C.img}" alt=""><div class="block"><div class="k">MODO</div><div class="t">Moto</div></div><div class="block">${paperLine("coche")}</div>`;
+  } else if(state.car==="no"){
+    body.innerHTML=`<div class="block"><div class="t">Sin vehículo</div></div>`;
+  } else {
+    const C=CAR[state.car]||CAR.pequeño;
+    const tint = {none:"",coral:"hue-rotate(-15deg) saturate(1.2)",navy:"hue-rotate(200deg) saturate(1.1)",verde:"hue-rotate(70deg)",grafito:"grayscale(.8) contrast(1.1)"}[state.carColor||"none"];
+    body.innerHTML=`<img class="viz" id="carviz" src="${C.img}" alt="" style="filter:${tint}">
+      <div class="block"><div class="k">FORMA</div><div class="t">${C.name}</div></div>
+      <div class="block"><div class="k">COLOR</div><div class="row" style="margin-top:8px">
+        <button class="pick ${state.carColor==="none"?"on":""}" data-color="none">De serie</button>
+        <button class="pick ${state.carColor==="coral"?"on":""}" data-color="coral">Coral</button>
+        <button class="pick ${state.carColor==="navy"?"on":""}" data-color="navy">Azul</button>
+        <button class="pick ${state.carColor==="verde"?"on":""}" data-color="verde">Verde</button>
+        <button class="pick ${state.carColor==="grafito"?"on":""}" data-color="grafito">Grafito</button>
+      </div></div>
+      <div class="block">${paperLine("coche")}</div>`;
+  }
+  const jb=document.getElementById("jobbody");
+  if(state.job==="no") jb.innerHTML=`<div class="block"><div class="t">Sin trabajo</div></div>`;
+  else {
+    const J=JOB[state.job];
+    const img=J.img?J.img:AV[state.g][state.look||state.a];
+    jb.innerHTML=`<img class="viz tall" src="${img}" alt=""><div class="block"><div class="k">SECTOR</div><div class="t">${J.name}</div><div class="s">${J.note}</div></div>`;
+  }
+}
+function hora(){
+  const h=new Date().getHours();
+  if(h<6||h>=21) return "noche";
+  if(h<12) return "mañana";
+  if(h<20) return "tarde";
+  return "noche";
+}
+function saludo(){
+  const h=hora();
+  const open=state.pendiente.filter(x=>!x.done)[0];
+  const bit=open?open.t:"";
+  const map={
+    tierno:{mañana:"Buenos días.",tarde:"Buenas tardes.",noche:"Ya es noche."},
+    serio:{mañana:"Buenos días.",tarde:"Buenas tardes.",noche:"Noche."},
+    malote:{mañana:"Buenos días.",tarde:"Buenas.",noche:"Noche. Queda poco."}
+  };
+  const head=map[state.a][h];
+  const tail=bit?(state.a==="malote"?" "+bit+".":" Hoy <b>"+bit+"</b>."):" Hoy no duele nada.";
+  return head+tail;
+}
+function lookKey(){return state.look||state.a||"tierno";}
+function petTint(p){return PETTINT[p.color]||"";}
+function renderPetsFeet(){
+  const box=document.getElementById("petsfeet"); if(!box) return;
+  box.innerHTML=(state.pets||[]).slice(0,3).map(p=>{
+    const sound=p.kind==="perro"?"¡guau!":"ras ras";
+    const marks=p.kind==="gato"?'<span class="marks"><i></i><i></i><i></i></span>':"";
+    const acc=ACCCOLOR.find(x=>x[0]===(p.accColor||"rojo"))||ACCCOLOR[0];
+    const band=p.accesorio==="panuelo"?"panuelo":"collar";
+    return `<div class="petwrap ${p.kind}" data-petact="${p.id}"><span class="bub">${sound}</span>${marks}<span class="acc ${band}" style="background:${acc[2]}"></span><img class="petbit" src="${PETIMG[p.kind]}" alt="" style="filter:${petTint(p)}"></div>`;
+  }).join("");
+}
+function renderPetsPage(){
+  const box=document.getElementById("petsbody"); if(!box) return;
+  const list=state.pets||[];
+  if(!list.length){box.innerHTML='<div class="block"><div class="t">Sin mascotas</div><div class="s">Añade un perro, un gato o los dos.</div></div>';return;}
+  box.innerHTML=list.map(p=>{
+    const care=[["vet","Veterinario"],["comida","Comida"],["collar","Collar"],["pastillas","Pastillas"],["peso","Peso"]].map(([k,l])=>l+": "+(p.care&&p.care[k]==="si"?"ok":p.care&&p.care[k]==="luego"?"luego":"—")).join(" · ");
+    return `<img class="viz" src="${PETIMG[p.kind]}" alt="" style="filter:${petTint(p)}"><div class="block"><button class="kill" data-delpet="${p.id}">✕</button><div class="k">${p.kind==="perro"?"PERRO":"GATO"}</div><div class="t">${esc(p.name)||"Sin nombre"}</div><div class="s">${esc(p.breed)||"—"} · ${p.weight?esc(p.weight)+" kg":"sin peso"}</div></div><div class="block"><div class="k">CUIDADOS</div><div class="s">${esc(care)}</div><button class="addbtn" data-editpet="${p.id}" style="margin-top:10px">Editar</button></div>`;
+  }).join("");
+}
+let petDraft=null;
+function closeQuiz(){ document.getElementById("quiz").classList.remove("on"); petDraft=null; }
+function openPetEditor(id){
+  const existing=id?state.pets.find(x=>String(x.id)===String(id)):null;
+  if(id && !existing && !(petDraft&&String(petDraft.id)===String(id))) return;
+  if(!petDraft || (id && String(petDraft.id)!==String(id)) || (!id && !petDraft._new)){
+    petDraft=existing?JSON.parse(JSON.stringify(existing)):{id:++uid,kind:"perro",name:"",weight:"",breed:"Mestizo",color:"marron",accesorio:"collar",accColor:"rojo",care:{},_new:true};
+  }
+  const pet=petDraft;
+  const kind=pet.kind||"perro";
+  let html=`<div class="grab"></div><h3>${pet._new?"Nueva mascota":"Editar"}</h3>
+    <div class="label">QUÉ ES</div><div class="row"><button class="pick ${kind==="perro"?"on":""}" data-petq="kind" data-v="perro">Perro</button><button class="pick ${kind==="gato"?"on":""}" data-petq="kind" data-v="gato">Gato</button></div>
+    <div class="label">NOMBRE</div><input id="petname" value="${esc(pet.name)}" placeholder="Luna, Rocky…">
+    <div class="label">PESO (kg)</div><input id="petkg" value="${esc(pet.weight)}" placeholder="4.2" inputmode="decimal">
+    <div class="label">RAZA</div><div class="row">${PETBREED[kind].map(b=>`<button class="pick ${pet.breed===b?"on":""}" data-petq="breed" data-v="${b}">${b}</button>`).join("")}</div>
+    <div class="label">COLOR</div><div class="row">${PETCOLOR[kind].map(([v,l])=>`<button class="pick ${pet.color===v?"on":""}" data-petq="color" data-v="${v}">${l}</button>`).join("")}</div>
+    <div class="label">ACCESORIO</div><div class="row"><button class="pick ${(pet.accesorio||"collar")==="collar"?"on":""}" data-petq="accesorio" data-v="collar">Collar</button><button class="pick ${pet.accesorio==="panuelo"?"on":""}" data-petq="accesorio" data-v="panuelo">Pañuelo</button></div>
+    <div class="label">COLOR DEL ACCESORIO</div><div class="row">${ACCCOLOR.map(([v,l])=>`<button class="pick ${(pet.accColor||"rojo")===v?"on":""}" data-petq="accColor" data-v="${v}">${l}</button>`).join("")}</div>
+    <div class="label">CUIDADOS</div>`;
+  [["vet","Veterinario"],["comida","Comida"],["collar","Collar anti mosquitos"],["pastillas","Pastillas"],["peso","Peso"]].forEach(([k,l])=>{
+    html+=`<div class="s" style="margin:8px 0 4px">${l}</div><div class="row"><button class="pick ${pet.care&&pet.care[k]==="si"?"on":""}" data-petcare="${k}" data-v="si">Sí</button><button class="pick ${pet.care&&pet.care[k]==="luego"?"on":""}" data-petcare="${k}" data-v="luego">Luego</button></div>`;
+  });
+  html+=`<button class="ok" id="petok" style="margin-top:14px">Guardar</button>
+    <button class="ok" id="petskip" style="margin-top:8px;background:transparent;color:var(--ink);border:1px solid var(--line)">Ahora no</button>`;
+  document.getElementById("quizpanel").innerHTML=html;
+  document.getElementById("quiz").classList.add("on");
+  document.getElementById("quizpanel").onclick=e=>{
+    const k=e.target.closest("[data-petq]");
+    if(k){
+      petDraft[k.dataset.petq]=k.dataset.v;
+      if(k.dataset.petq==="kind"){
+        petDraft.name=(document.getElementById("petname")||{}).value||petDraft.name;
+        petDraft.weight=(document.getElementById("petkg")||{}).value||petDraft.weight;
+        petDraft.breed=PETBREED[petDraft.kind][0]; petDraft.color=PETCOLOR[petDraft.kind][0][0];
+        openPetEditor(petDraft.id); return;
+      }
+      k.parentElement.querySelectorAll("[data-petq]").forEach(x=>{if(x.dataset.petq===k.dataset.petq)x.classList.remove("on")});
+      k.classList.add("on");
+    }
+    const c=e.target.closest("[data-petcare]");
+    if(c){
+      petDraft.care=petDraft.care||{}; petDraft.care[c.dataset.petcare]=c.dataset.v;
+      c.parentElement.querySelectorAll("[data-petcare]").forEach(x=>{if(x.dataset.petcare===c.dataset.petcare)x.classList.remove("on")});
+      c.classList.add("on");
+    }
+  };
+  document.getElementById("petok").onclick=()=>{
+    petDraft.name=document.getElementById("petname").value.trim();
+    petDraft.weight=document.getElementById("petkg").value.trim();
+    const keep={...petDraft}; delete keep._new;
+    const i=state.pets.findIndex(x=>String(x.id)===String(keep.id));
+    if(i>=0) state.pets[i]=keep; else state.pets.push(keep);
+    state.seenMascotas=true;
+    closeQuiz(); save(); renderPetsPage(); renderPetsFeet(); paintTabs();
+  };
+  document.getElementById("petskip").onclick=()=>{ state.seenMascotas=true; closeQuiz(); };
+}
+function applyLook(){
+  if(state.city==="madrid") state.city="ciudad";
+  if(state.city==="valencia") state.city="costa";
+  if(state.city==="otro") state.city="pueblo";
+  if(!state.look) state.look=state.a||"tierno";
+  const night=hora()==="noche";
+  document.body.className=state.a+(night?" noche":"")+(state.wx==="viento"?" viento":"");
+  const lk=lookKey();
+  document.getElementById("avatar").src=AV[state.g][lk];
+  document.getElementById("chatav").src=AV[state.g][lk];
+  document.getElementById("phrase").innerHTML=saludo();
+  const c=CITY[state.city]||CITY.ciudad;
+  const bg=document.getElementById("citybg");
+  bg.src=c.img; bg.className="bg lugar-"+state.city;
+  document.getElementById("cityn").textContent=c.name;
+  document.getElementById("wx").textContent=WXLAB[state.wx||"sol"];
+  document.getElementById("wxrow").className="wxrow "+(state.wx||"sol");
+  const days=["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
+  document.getElementById("stamp").textContent=days[new Date().getDay()].toUpperCase()+" · "+c.name;
+  renderPetsFeet();
+}
+function openSetup(){ syncSetupPicks(); show("setup"); }
+
+function classify(text, forceDoor){
+  const t=text.toLowerCase();
+  if(forceDoor==="compra" || /leche|compra|tarta|bombilla|pienso|arena|pipeta/.test(t)) return {door:"compra",k:"LISTA",t:cap(text),s:"Compra"};
+  if(forceDoor==="importante" || /cumple|importante|regalo/.test(t)) return {door:"importante",k:"MARCADO",t:cap(text),s:"Marcado"};
+  if(/veterinar|vacuna|desparasit|antipulga|anti.?mosquito|pastilla|collar|mascota|perro|gato/.test(t) && !forceDoor)
+    return {door:"pendiente",k:"MASCOTA",t:cap(text),s:"Mascota"};
+  if(/itv|coche|seguro|ivtm|moto/.test(t)) return {door:"pendiente",k:"COCHE",t:cap(text),s:"Coche"};
+  if(/ibi|comunidad|wifi|luz|gas|agua|alquiler/.test(t)) return {door:"pendiente",k:"CASA",t:cap(text),s:"Casa"};
+  if(/reun|dentista|cita|médico|medico/.test(t)) return {door:"pendiente",k:"CITA",t:cap(text),s:"Con hora"};
+  return {door:forceDoor||"pendiente",k:"NOTA",t:cap(text),s:"Apuntado"};
+}
+function cap(s){return s?s.charAt(0).toUpperCase()+s.slice(1):"";}
+function esc(s){return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));}
+function addItem(text, door){
+  const g=classify(text, door);
+  if(state[g.door].some(x=>x.t.toLowerCase()===g.t.toLowerCase())) return g;
+  state[g.door].unshift({id:++uid,k:g.k,t:g.t,s:g.s});
+  save(); renderLists();
+  return g;
+}
+function findItem(q){
+  q=q.toLowerCase();
+  for(const d of ["pendiente","importante","compra"]){
+    const hit=state[d].find(x=>x.t.toLowerCase().includes(q) || q.includes(x.t.toLowerCase()));
+    if(hit) return {d,hit};
+  }
+}
+function delItem(id){
+  for(const d of ["pendiente","importante","compra"]){
+    const i=state[d].findIndex(x=>String(x.id)===String(id));
+    if(i>=0){ const t=state[d][i].t; state[d].splice(i,1); save(); renderLists(); return t; }
+  }
+}
+function handleTalk(raw){
+  const t=raw.trim();
+  const say=SAY[state.a];
+  let reply;
+  const mDel=t.match(/^(borra|quita|elimina)\s+(.+)/i);
+  const mEdit=t.match(/^(cambia|pasa|mueve)\s+(.+?)\s+(a|por)\s+(.+)/i);
+  if(mDel){
+    const f=findItem(mDel[2]);
+    if(f){ delItem(f.hit.id); reply=say.del(f.hit.t); }
+    else reply="No encuentro eso.";
+  } else if(mEdit){
+    const f=findItem(mEdit[2]);
+    if(f){ f.hit.s=mEdit[4]; f.hit.t=cap(mEdit[2]); save(); renderLists(); reply=say.edit(f.hit.t+" → "+mEdit[4]); }
+    else reply="No encuentro eso para cambiarlo.";
+  } else {
+    const g=addItem(t.replace(/^(apunta|añade|anota|pon)\s+/i,""));
+    reply=say.ok(g.t+" → "+g.door);
+  }
+  return reply;
+}
+
+document.querySelectorAll("[data-g]").forEach(b=>b.onclick=()=>{document.querySelectorAll("[data-g]").forEach(x=>x.classList.remove("on"));b.classList.add("on");state.g=b.dataset.g});
+document.querySelectorAll("[data-look]").forEach(b=>b.onclick=()=>{document.querySelectorAll("[data-look]").forEach(x=>x.classList.remove("on"));b.classList.add("on");state.look=b.dataset.look});
+document.querySelectorAll("[data-a]").forEach(b=>b.onclick=()=>{document.querySelectorAll("[data-a]").forEach(x=>x.classList.remove("on"));b.classList.add("on");state.a=b.dataset.a;document.body.className=state.a});
+document.querySelectorAll("[data-city]").forEach(b=>b.onclick=()=>{document.querySelectorAll("[data-city]").forEach(x=>x.classList.remove("on"));b.classList.add("on");state.city=b.dataset.city});
+document.querySelectorAll("[data-house]").forEach(b=>b.onclick=()=>{document.querySelectorAll("[data-house]").forEach(x=>x.classList.remove("on"));b.classList.add("on");state.house=b.dataset.house});
+document.querySelectorAll("[data-car]").forEach(b=>b.onclick=()=>{document.querySelectorAll("[data-car]").forEach(x=>x.classList.remove("on"));b.classList.add("on");state.car=b.dataset.car});
+document.querySelectorAll("[data-job]").forEach(b=>b.onclick=()=>{document.querySelectorAll("[data-job]").forEach(x=>x.classList.remove("on"));b.classList.add("on");state.job=b.dataset.job});
+document.querySelectorAll("[data-wx]").forEach(b=>b.onclick=()=>{document.querySelectorAll("[data-wx]").forEach(x=>x.classList.remove("on"));b.classList.add("on");state.wx=b.dataset.wx});
+
+function bootApp(){ save(); applyLook(); renderLists(); renderWorlds(); renderPetsPage(); paintTabs(); show("home"); }
+function syncSetupPicks(){
+  [["data-g",state.g],["data-look",state.look],["data-a",state.a],["data-city",state.city],["data-wx",state.wx]].forEach(([attr,val])=>{
+    document.querySelectorAll("["+attr+"]").forEach(b=>b.classList.toggle("on", b.getAttribute(attr)===val));
+  });
+  document.body.className=state.a||"tierno";
+}
+document.getElementById("enter").onclick=bootApp;
+
+document.addEventListener("click", e=>{
+  const tab=e.target.closest("[data-tab]"); if(tab) show(tab.dataset.tab);
+  const open=e.target.closest("[data-open]"); if(open) show(open.dataset.open);
+  if(e.target.matches("[data-back]")) show("home");
+  const add=e.target.closest("[data-add]"); if(add) openSheet(add.dataset.add);
+  const kill=e.target.closest("[data-del]"); if(kill){ const t=delItem(kill.dataset.del); toast("Borrado: "+t); return; }
+  const tog=e.target.closest("[data-toggle]");
+  if(tog){
+    const id=tog.dataset.toggle;
+    for(const d of ["pendiente","importante","compra"]){
+      const it=state[d].find(x=>String(x.id)===id);
+      if(it){ it.done=!it.done; save(); renderLists(); toast(it.done?"Hecho. El miniyo asiente.":"Vuelve a la lista."); applyLook(); }
+    }
+  }
+  if(e.target.id==="cityn" || e.target.id==="stamp"){ openSetup(); return; }
+  const act=e.target.closest("[data-petact]");
+  if(act){ const p=(state.pets||[]).find(x=>String(x.id)===String(act.dataset.petact)); if(p) toast(p.kind==="perro"?(p.name||"El perro")+" · ¡guau!":(p.name||"El gato")+" · ras ras"); return; }
+  const delp=e.target.closest("[data-delpet]");
+  if(delp){ state.pets=state.pets.filter(x=>String(x.id)!==String(delp.dataset.delpet)); save(); renderPetsPage(); renderPetsFeet(); paintTabs(); toast("Mascota fuera."); return; }
+  const edp=e.target.closest("[data-editpet]");
+  if(edp){ openPetEditor(edp.dataset.editpet); return; }
+  const col=e.target.closest("[data-color]");
+  if(col){ state.carColor=col.dataset.color; save(); renderWorlds(); }
+  const q=e.target.closest("[data-q]");
+  if(q){
+    const key=q.dataset.q, v=q.dataset.v;
+    if(key==="house") state.house=v;
+    if(key==="regimen") state.regimen=v;
+    if(key==="car") state.car=v;
+    if(key==="job") state.job=v;
+    if(key==="wifi") state.wifi=v;
+    if(key==="vehKind"){
+      state.vehKind=v;
+      if(v==="moto") state.car="moto";
+      if(v==="coche" && (state.car==="moto"||state.car==="no")) state.car="pequeño";
+      if(v==="publico"||v==="patinete") state.car="no";
+    }
+    q.parentElement.querySelectorAll("[data-q]").forEach(x=>{if(x.dataset.q===key)x.classList.remove("on")});
+    q.classList.add("on");
+    if(key==="vehKind") openQuiz("coche");
+  }
+  const tv=e.target.closest("[data-tv]");
+  if(tv){
+    const val=tv.dataset.tv;
+    if(val==="__none") state.tv=[];
+    else {
+      state.tv=state.tv||[];
+      const i=state.tv.indexOf(val);
+      if(i>=0) state.tv.splice(i,1); else state.tv.push(val);
+    }
+    openQuiz("casa");
+  }
+  const pap=e.target.closest("[data-paper]");
+  if(pap){
+    const bag=pap.dataset.paper==="casa"?state.housePapers:state.carPapers;
+    bag[pap.dataset.id]=pap.dataset.v;
+    pap.parentElement.querySelectorAll("[data-paper]").forEach(x=>{if(x.dataset.id===pap.dataset.id)x.classList.remove("on")});
+    pap.classList.add("on");
+  }
+});
+
+const sheet=document.getElementById("sheet"), guess=document.getElementById("guess"), addin=document.getElementById("addin");
+let forceDoor=null;
+function openSheet(door){
+  forceDoor=door||null;
+  document.getElementById("sheettitle").textContent=door==="compra"?"Añadir compra":door==="importante"?"Añadir importante":"Añadir cita o recordatorio";
+  addin.value=""; guess.className="guess"; sheet.classList.add("on"); addin.focus();
+}
+document.getElementById("plus").onclick=()=>openSheet(null);
+document.getElementById("addpet").onclick=()=>{petDraft=null;openPetEditor(null)};
+sheet.onclick=e=>{if(e.target===sheet) sheet.classList.remove("on")};
+document.getElementById("quiz").onclick=e=>{if(e.target.id==="quiz"){ state.seenMascotas=true; closeQuiz(); }};
+document.querySelectorAll(".chip").forEach(c=>c.onclick=()=>{addin.value=c.dataset.ex; const g=classify(c.dataset.ex,forceDoor); guess.className="guess on"; guess.textContent="Va a "+g.door+".";});
+addin.oninput=()=>{if(!addin.value.trim()){guess.className="guess";return} const g=classify(addin.value,forceDoor); guess.className="guess on"; guess.textContent="Va a "+g.door+".";};
+document.getElementById("confirm").onclick=()=>{
+  const text=addin.value.trim(); if(!text) return;
+  const g=addItem(text, forceDoor);
+  sheet.classList.remove("on");
+  toast("Guardado en "+g.door);
+};
+
+function bubble(who,text){
+  const d=document.createElement("div");
+  d.className="msg "+who; d.textContent=text;
+  document.getElementById("msgs").appendChild(d);
+  d.scrollIntoView();
+}
+function openChat(){
+  document.getElementById("chat").classList.add("on");
+  document.getElementById("chatav").src=AV[state.g][state.look||state.a];
+  const box=document.getElementById("msgs");
+  if(!box.childElementCount){
+    bubble("bot", SAY[state.a].huh.replace("No te pillo. ","").replace("No entendido. ","").replace("Habla claro: ","Dime: "));
+  }
+  document.getElementById("chatin").focus();
+}
+function sendChat(){
+  const inp=document.getElementById("chatin");
+  const t=inp.value.trim(); if(!t) return;
+  inp.value="";
+  bubble("me", t);
+  bubble("bot", handleTalk(t));
+}
+let lineI=0;
+document.getElementById("avatar").onclick=()=>{
+  const arr=LINES[state.a];
+  lineI=(lineI+1)%arr.length;
+  document.getElementById("phrase").textContent=arr[lineI];
+};
+document.getElementById("openchat").onclick=openChat;
+document.getElementById("closechat").onclick=()=>document.getElementById("chat").classList.remove("on");
+document.getElementById("chatsend").onclick=sendChat;
+document.getElementById("chatin").onkeydown=e=>{if(e.key==="Enter") sendChat();};
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.register("./sw.js").catch(()=>{});
+}
+syncSetupPicks();
+if(hadSave){ applyLook(); renderLists(); renderWorlds(); renderPetsPage(); paintTabs(); show("home"); }
+</script>
+</body>
+</html>
